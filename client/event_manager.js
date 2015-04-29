@@ -20,6 +20,8 @@ var EventManager = function() {
     /**
      * Form events are of many types (check forms). So we take special care of them
      */
+    console.log("HANDLING EVENT", event);
+
     if (event.type === "forms") {
       this.forms(event.getAppName())[event.getName()].handleEvent(event);
     } else
@@ -37,8 +39,8 @@ var EventManager = function() {
    * NucleusEventManager is initialized in `NucleusUser` model when user toggles the event sync
    */
   this.initialize = function() {
-    var NucleusUser = this.NucleusUser = window.NucleusUser;
-    var NucleusUsers = this.NucleusUsers = window.NucleusUser.me().collection();
+    var NucleusUser = this.NucleusUser = NucleusClient.getWindow().NucleusUser;
+    var NucleusUsers = this.NucleusUsers = NucleusClient.getWindow().NucleusUser.me().collection();
 
     var user = NucleusUser.me(),
         syncing_app_events = user.syncing_app_events,
@@ -54,6 +56,8 @@ var EventManager = function() {
         appLocation = new LocationEvent("app"),
         appLogin = new LoginEvent("app"),
         appForms = new FormsEvent("app");
+
+    console.log("Initialized click events", appClick);
 
     this.nucleus_initalized = false;
     this.nucleusUtils = new EventUtils($nucleusWindow);
@@ -230,7 +234,7 @@ var EventManager = function() {
 var _ElementCache = function () {
   var cache = {},
       guidCounter = 1,
-      expando = "data" + (new Date).getTime();
+      expando = "data" + (new Date()).getTime();
 
   this.getData = function (elem) {
     var guid = elem[expando];
@@ -311,7 +315,7 @@ var _fixEvent = function (event, elem) {
     event.isImmediatePropagationStopped = returnFalse;
 
     // Handle mouse position
-    if (event.clientX != null) {
+    if (event.clientX !== null) {
       var doc = document.documentElement, body = document.body;
 
       event.pageX = event.clientX +
@@ -327,7 +331,7 @@ var _fixEvent = function (event, elem) {
 
     // Fix button for mouse clicks:
     // 0 == left; 1 == middle; 2 == right
-    if (event.button != null) {
+    if (event.button !== null) {
       event.button = (event.button & 1 ? 0 :
                       (event.button & 4 ? 1 :
                        (event.button & 2 ? 2 : 0)));

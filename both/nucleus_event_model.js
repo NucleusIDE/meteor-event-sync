@@ -61,7 +61,9 @@ NucleusEvent.extend({
      * This method should be called in place of `this.save()`. Because of a bug in `channikhabra:stupid-models` it wasn't possible to override `this.save()` because the methods in this block are piled up the prototype chain.
      */
 
-    var userId = NucleusUser.me()._id;
+    var userId = NucleusClient.getWindow().NucleusUser.me()._id;
+    console.log("BROADCASTING EVENT", this.type);
+
     this.users_done = [userId];
     this.originator = userId;
     this.triggered_at = moment().toDate().getTime();

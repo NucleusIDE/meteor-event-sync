@@ -19,6 +19,12 @@ Package.onUse(function(api) {
     ['client', 'server']);
 
   api.addFiles([
+    'server/permissions.js',
+    'server/publisher.js'
+  ], 'server');
+
+  api.addFiles([
+    'client/subscriptions.js',
     'client/event_manager.js',
     'client/utils.js',
     'client/nucleus_file_changes.js',
