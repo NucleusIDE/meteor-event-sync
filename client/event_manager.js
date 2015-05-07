@@ -28,12 +28,14 @@ EventManager.prototype._setupAllEvents = function() {
   this.click = new Click();
   this.location = new LocationEvent();
   this.scroll = new Scroll();
+  // this.login = new LoginEvent();
 };
 
 EventManager.prototype._tearDownAllEvents = function() {
   this.click.tearDown();
   this.location.tearDown();
   this.scroll.tearDown();
+  // this.login.tearDown();
 };
 
 EventManager.prototype.handleEvent = function(event) {
@@ -41,7 +43,7 @@ EventManager.prototype.handleEvent = function(event) {
    * Simple proxy for handling all kind of events with same interface.
    * Form events are of many types (check forms). So we take special care of them
    */
-  console.log("HANDLING EVENT", event);
+  console.log("HANDLING EVENT", event.getName());
 
   if (event.type === "forms") {
     this.forms(event.getAppName())[event.getName()].handleEvent(event);

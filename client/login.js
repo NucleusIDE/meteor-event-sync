@@ -4,13 +4,13 @@
 
 LoginEvent = function(appName) {
   var EVENT_NAME = 'login',
-      APP_NAME = appName,
-      $window = NucleusClient.getWindow(APP_NAME),
-      utils = NucleusEventManager.getUtils(APP_NAME);
+      $window = window,
+      utils = new EventUtils($window);
 
   this.initialize = function() {
     this.overRideLoginWithPassword();
     this.overRideLogout();
+    return this;
   };
 
   this.tearDown = function() {
@@ -46,17 +46,16 @@ LoginEvent = function(appName) {
     var args = Array.prototype.slice.call(arguments, 0);
     var ret = $window.Meteor.loginWithPasswordOriginal.apply($window.Meteor, args);
 
-    if (NucleusEventManager.canEmitEvents) {
+    if (NucleusEventManager.canEmitEvents.get()) {
       var ev = new NucleusEvent();
 
       ev.setName(EVENT_NAME);
-      ev.setAppName(APP_NAME);
       // We simply store all the arguments used to call the `loginWithPassword` and replay the event over the wire.
       ev.args = args;
       ev.type = 'login';
       ev.broadcast();
     } else {
-      NucleusEventManager.canEmitEvents = true;
+      NucleusEventManager.canEmitEvents.set(true);
     }
 
     return ret;
@@ -66,23 +65,22 @@ LoginEvent = function(appName) {
     var args = Array.prototype.slice.call(arguments, 0);
     var ret = $window.Meteor.logoutOriginal.apply($window.Meteor, args);
 
-    if (NucleusEventManager.canEmitEvents) {
+    if (NucleusEventManager.canEmitEvents.get()) {
       var ev = new NucleusEvent();
 
       ev.setName(EVENT_NAME);
-      ev.setAppName(APP_NAME);
       ev.args = args;
       ev.type = 'logout';
       ev.broadcast();
     } else {
-      NucleusEventManager.canEmitEvents = true;
+      NucleusEventManager.canEmitEvents.set(true);
     }
 
     return ret;
   };
 
   this.handleEvent = function(event) {
-    NucleusEventManager.canEmitEvents = false;
+    NucleusEventManager.canEmitEvents.set(false);
 
     var args = event.args;
 
@@ -92,4 +90,6 @@ LoginEvent = function(appName) {
 
     return $window.Meteor.loginWithPasswordOriginal.apply($window.Meteor, args);
   };
+
+  return this.initialize();
 };

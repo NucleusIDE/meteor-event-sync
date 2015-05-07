@@ -44,7 +44,7 @@ NucleusEvent.extend({
      * methods in this block are piled up the prototype chain.
      */
 
-    console.log("BROADCASTING EVENT", this);
+    console.log("BROADCASTING EVENT", this.getName());
     this.originator_id = NucleusEventManager._originatorId;
     this.triggered_at = moment().toDate().getTime();
     this.save();
