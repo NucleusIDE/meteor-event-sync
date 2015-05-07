@@ -9,7 +9,7 @@ Package.describe({
 Package.onUse(function(api) {
   api.versionsFrom("METEOR@0.9.1");
 
-  api.use(['jquery', 'deps', 'underscore', 'session',
+  api.use(['jquery', 'deps', 'underscore', 'session', 'mongo',
            'reactive-var',
            'mrt:moment@2.8.1',
            'nucleuside:smart-models@0.0.6',]);
@@ -24,6 +24,7 @@ Package.onUse(function(api) {
   ], 'server');
 
   api.addFiles([
+    'global_overrides.js',
     'client/subscriptions.js',
     'client/event_manager.js',
     'client/utils.js',

@@ -4,228 +4,115 @@
  * Single point of interaction for event sync.
  */
 var EventManager = function() {
-  /**
-   * This flag is used to prevent event ping-pong and re-inserts. When we recieve an event, we mark `NucleusEventManager.canEmitEvents` to false so that the client won't re-send received event.
-   */
-  this.canEmitEvents = true;
+  // This flag is used to prevent event ping-pong and re-inserts. When we recieve an event, we mark `NucleusEventManager.canEmitEvents` to false so that the client won't re-send received event.
+  this.canEmitEvents = new ReactiveVar(true);
+  this.isSyncingEvents = new ReactiveVar(false);
+  this._eventSub = null;
+  this._originatorId = new Mongo.ObjectID()._str;
+};
 
-  this.isProcessingEvent= function() {
-    return ! this.canEmitEvents;
-  };
+EventManager.prototype.start = function() {
+  this.isSyncingEvents.set(true);
+  this._eventSub = Meteor.subscribe('nucleus_events');
+  this._setupAllEvents();
+  this._startRecievingEvents();
+};
 
+EventManager.prototype.stop = function() {
+  this.isSyncingEvents.set(true);
+  this._eventSub.stop();
+};
+
+EventManager.prototype._setupAllEvents = function() {
+  this.click = new Click();
+};
+
+EventManager.prototype.handleEvent = function(event) {
   /**
    * Simple proxy for handling all kind of events with same interface.
+   * Form events are of many types (check forms). So we take special care of them
    */
-  this.handleEvent = function(event) {
-    /**
-     * Form events are of many types (check forms). So we take special care of them
-     */
-    console.log("HANDLING EVENT", event);
+  console.log("HANDLING EVENT", event);
 
-    if (event.type === "forms") {
-      this.forms(event.getAppName())[event.getName()].handleEvent(event);
-    } else
-      //this should produce something like `this.click("app").handleEvent(event)`
-      this[event.getName()](event.getAppName()).handleEvent(event);
-  };
+  if (event.type === "forms") {
+    this.forms(event.getAppName())[event.getName()].handleEvent(event);
+  } else
+    //this should produce something like `this.click("app").handleEvent(event)`
+    this[event.getName()].handleEvent(event);
+};
 
-  this.getUtils = function(appName) {
-    return appName === "app" ? this.appUtils : this.nucleusUtils;
-  };
+EventManager.prototype._startRecievingEvents = function() {
+  //Replay all events since latest route change.
+  // this.replayEventsSinceLastRouteChange();
 
-  /**
-   * This is a pretty fat initializing function. It does a lot of work since we have to sync events for both app and Nucleus windows.
-   *
-   * NucleusEventManager is initialized in `NucleusUser` model when user toggles the event sync
-   */
-  this.initialize = function() {
-    var NucleusUser = this.NucleusUser = NucleusClient.getWindow().NucleusUser;
-    var NucleusUsers = this.NucleusUsers = NucleusClient.getWindow().NucleusUser.me().collection();
+  var events = NucleusEvent.getNewEvents();    //Get new events to be played.
+  var eventListener = events.observe({
+    added: function(event) {
+      NucleusEventManager.handleEvent(event);
+    }.bind(this)
+  });
 
-    var user = NucleusUser.me(),
-        syncing_app_events = user.syncing_app_events,
-        syncing_nucleus_events = user.syncing_nucleus_events,
-        $appWindow = NucleusClient.getWindow("app"),
-        $nucleusWindow = NucleusClient.getWindow("nucleus");
-
-    this.app_initalized = false;
-    this.appUtils = new EventUtils($appWindow);
-    //All these events `Click`, `Scroll` etc are defined in their respective files in eventSync directory
-    var appClick = new Click("app"),
-        appScroll = new Scroll("app"),
-        appLocation = new LocationEvent("app"),
-        appLogin = new LoginEvent("app"),
-        appForms = new FormsEvent("app");
-
-    console.log("Initialized click events", appClick);
-
-    this.nucleus_initalized = false;
-    this.nucleusUtils = new EventUtils($nucleusWindow);
-    /**
-     * We don't sync all events for Nucleus. Only following events are synced:
-     * * click : so a users could follow each other about which files they open in sidebar
-     * * scroll : scrolling in the nucleus editor
-     * * forms : commit message form
-     */
-    var nucleusClick = new Click("nucleus"),
-        nucleusScroll = new Scroll("nucleus"),
-        nucleusForms = new FormsEvent("nucleus");
-
-    /**
-     * We create proxies for all events since there are two type of apps emitting same events. I thought it's a nice way of doing this. I still think so.
-     */
-    this.click = function(appName) {
-      return appName === "app" ? appClick : nucleusClick;
-    };
-    this.scroll = function(appName) {
-      return appName === "app" ? appScroll : nucleusScroll;
-    };
-    this.location = function(appName) {
-      //We don't need location event in nucleus window for now. Making this function just to stay consistent.
-      return appName === "app" ? appLocation : false;
-    };
-    this.login = function(appName) {
-      //This of course must not be synced in nucleus. But let's stay consistent
-      return appName === "app" ? appLogin : false;
-    };
-    this.forms = function(appName) {
-      return appName === "app" ? appForms : nucleusForms;
-    };
-
-    //Sometimes it takes time for NucleusUser.me().syncing_*_events to come down the wire.
-    //Let's run an interval to initialize the events properly when event manager is initalized
-    var initInterval = Meteor.setInterval(function() {
-      var user = NucleusUser.me();
-      if (user.syncing_nucleus_events || user.syncing_app_events) {
-        Meteor.clearInterval(initInterval);
-
-        if(user.syncing_app_events && !this.app_initialized) {
-          //If someone is already logged in before joining sync, let's log them out so their login state won't interfere with others.
-          // This is to bring everyone on same page.
-          if($appWindow.Meteor.logout) $appWindow.Meteor.logout();
-
-          this.click("app").initialize();
-          this.scroll("app").initialize();
-          this.location("app").initialize();
-          this.login("app").initialize();
-          this.forms("app").initialize();
-
-          this.app_initialized = true;
-
-          this.startRecievingEvents();
-        }
-
-        if(user.syncing_nucleus_events  && !this.nucleus_initalized) {
-          this.click("nucleus").initialize();
-          this.scroll("nucleus").initialize();
-          this.forms("nucleus").initialize();
-
-          this.nucleus_initialized = true;
-
-          this.startRecievingEvents();
-        }
-      }
-    }.bind(this));
-
-  };
-
-  this.tearDown = function() {
-    var user = NucleusUser.me();
-
-    if(window.name !== 'Nucleus') {
-      this.click('app').tearDown();
-      this.scroll('app').tearDown();
-      this.forms('app').tearDown();
-      this.location('app').tearDown();
-      this.login('app').tearDown();
-    }
-    if(window.name === 'Nucleus') {
-      console.log("Tearing down nucleus");
-      this.click('nucleus').tearDown();
-      this.scroll('nucleus').tearDown();
-      this.forms('nucleus').tearDown();
+  Tracker.autorun(function() {
+    if(! this.isSyncingEvents.get()) {
+      console.log("Stopping EventListener");
+      eventListener.stop();
     }
 
-    this.stopRecievingEvents = true;
-  };
+  }.bind(this));
+};
 
-  /**
-   * Get all users which are syncing events i.e which are ready to receive events.
-   */
-  this.getRecievers = function() {
-    return this.NucleusUsers.find({recieve_events: true});
-  };
-
-  /**
-   * Sets up an autorun to start receiving events. It also keeps an eye if user want to stop receiving events and stop this autorun if so.
-   */
-  this.startRecievingEvents = function() {
-    //Replay all events since latest route change.
-    this.replayEventsSinceLastRouteChange();
-    Deps.autorun(function(c) {
-      //Get new events to be played.
-      var events = NucleusEvent.getNewEvents();
-      if(this.stopRecievingEvents) c.stop();
-      //Play all new events.
-      NucleusEventManager.playEvents(events);
-    });
-  };
-
+EventManager.prototype.playEvents = function(events) {
   /**
    * Play an array of `events`. Because of the heavy-lifting done in `NucleusEventManager.initialize()`, all these methods are pretty thin and easy to read.
    */
-  this.playEvents = function(events) {
-    _.each(events, function(event) {
-      if(!event) return;
-      if(_.contains(event.getDoneUsers(), NucleusUser.me()._id)) return;
+  _.each(events, function(event) {
+    if(!event) return;
+    NucleusEventManager.handleEvent(event);
+  });
+};
 
-      event.markDoneForMe();
-      NucleusEventManager.handleEvent(event);
-    });
-  };
-
+EventManager.prototype.replayEventsSinceLastRouteChange = function() {
   /**
    * Replay all events that happened after latest route change.
    */
-  this.replayEventsSinceLastRouteChange = function() {
-    var onlineUsers = NucleusEventManager.getRecievers().map(function(user) {
-      return user._id;
-    });
-    onlineUsers = _.difference(onlineUsers, NucleusUser.me()._id);
+  var onlineUsers = NucleusEventManager.getRecievers().map(function(user) {
+    return user._id;
+  });
+  onlineUsers = _.difference(onlineUsers, NucleusUser.me()._id);
 
-    if(onlineUsers.length === 0) {return false;}
+  if(onlineUsers.length === 0) {return false;}
 
-    // Get the last go event created by any logged in nucleus user.
-    var lastGoEvent = NucleusEvents.find({name: "location", originator: {$in: onlineUsers}}, {sort: {triggered_at: -1}, limit: 1}).fetch()[0];
+  // Get the last go event created by any logged in nucleus user.
+  var lastGoEvent = NucleusEvents.find({name: "location", originator: {$in: onlineUsers}}, {sort: {triggered_at: -2}, limit: 1  }).fetch()[0];
 
-    if(lastGoEvent) {
-      //Get all the events that happened after `go` event
-      var followingEvents = NucleusEvents.find({triggered_at: {$gt: lastGoEvent.triggered_at}}).fetch();
-    }
+  if(lastGoEvent) {
+    //Get all the events that happened after `go` event
+    var followingEvents = NucleusEvents.find({triggered_at: {$gt: lastGoEvent.triggered_at}}).fetch();
+  }
 
-    //Get the last login event that happened.
-    var lastLoginEvent = NucleusEvents.find({name: "login", type: "login", originator: {$in: onlineUsers}}, {sort: {triggered_at: -1}, limit: 1}).fetch()[0];
+  //Get the last login event that happened.
+  var lastLoginEvent = NucleusEvents.find({name: "login", type: "login", originator: {$in: onlineUsers}}, {sort: {triggered_at: -1}, limit: 1}).fetch()[0];
 
-    //Log in every user who want to sync events. This is so that we won't attempt to route a user to a page which is not accessible because they're not logged in or are logged in as some other user type.
-    NucleusEventManager.playEvents([lastLoginEvent]);
+  //Log in every user who want to sync events. This is so that we won't attempt to route a user to a page which is not accessible because they're not logged in or are logged in as some other user type.
+  NucleusEventManager.playEvents([lastLoginEvent]);
 
-    if(! lastGoEvent) return false;
+  if(! lastGoEvent) return false;
 
-    //FIXME: Find a reliable way to make sure last login event is played and user is logged in successfully before playing last route event
+  //FIXME: Find a reliable way to make sure last login event is played and user is logged in successfully before playing last route event
+  Meteor.setTimeout(function() {
+    /* The template to which the go event goes must be rendered before we can trigger events that follow.
+     * Otherwise it interfere and some of the following events get triggered on the page before go event.
+     *
+     * FIXME: Find a reliable way to call following events after the template to which go event takes is rendered
+     */
+    NucleusEventManager.playEvents([lastGoEvent]);
+
     Meteor.setTimeout(function() {
-      /* The template to which the go event goes must be rendered before we can trigger events that follow.
-       * Otherwise it interfere and some of the following events get triggered on the page before go event.
-       *
-       * FIXME: Find a reliable way to call following events after the template to which go event takes is rendered
-       */
-      NucleusEventManager.playEvents([lastGoEvent]);
-
-      Meteor.setTimeout(function() {
-        NucleusEventManager.playEvents(followingEvents);
-      }, 300);
+      NucleusEventManager.playEvents(followingEvents);
     }, 300);
-  };
+  }, 300);
 };
+
 
 //,-----------------------------------------------------------
 //| START COPIED CODE
