@@ -3,11 +3,10 @@
  * Handle capturing, syncing and receiving route change events.
  */
 
-LocationEvent = function(appName) {
+LocationEvent = function() {
   var EVENT_NAME = 'location',
-      APP_NAME = appName,
-      $window = NucleusClient.getWindow(APP_NAME),
-      utils = NucleusEventManager.getUtils(APP_NAME);
+      $window = window,
+      utils = new EventUtils($window);
 
   /**
    * Override router go calls, and add `popstate` event for handling back/forward events in browser
@@ -15,6 +14,8 @@ LocationEvent = function(appName) {
   this.initialize = function() {
     this.overRideGoCalls();
     NucleusEventManager.addEvent($window, 'popstate', this.syncGoPushstate);
+
+    return this;
   };
 
   this.tearDown = function() {
@@ -50,16 +51,15 @@ LocationEvent = function(appName) {
       var ret = $window[router].originalGo.apply($window[router], args);
       this.pushHistory();
 
-      if (NucleusEventManager.canEmitEvents) {
+      if (NucleusEventManager.canEmitEvents.get()) {
         var ev = new NucleusEvent();
 
         ev.setName(EVENT_NAME);
-        ev.setAppName(APP_NAME);
         ev.router = router;
         ev.args = args;
         ev.broadcast();
       } else {
-        NucleusEventManager.canEmitEvents = true;
+        NucleusEventManager.canEmitEvents.set(true);
       }
 
       return ret;
@@ -80,7 +80,7 @@ LocationEvent = function(appName) {
       else return 'back';
     };
 
-    if (NucleusEventManager.canEmitEvents) {
+    if (NucleusEventManager.canEmitEvents.get()) {
       var hist = loc.history,
           cursor = loc.curIndex,
           url = $window.location.pathname;
@@ -88,7 +88,6 @@ LocationEvent = function(appName) {
       var ev = new NucleusEvent();
       ev.setName(EVENT_NAME);
       ev.type = 'popstate';
-      ev.setAppName(APP_NAME);
 
       if(movedDirection(hist, url, cursor) === 'back') {
         cursor = cursor - 1;
@@ -107,7 +106,7 @@ LocationEvent = function(appName) {
         return;
       }
     } else {
-      NucleusEventManager.canEmitEvents = true;
+      NucleusEventManager.canEmitEvents.set(true);
     }
   };
 
@@ -143,7 +142,7 @@ LocationEvent = function(appName) {
 
   //Handle received events
   this.handleEvent = function(event) {
-    NucleusEventManager.canEmitEvents = false;
+    NucleusEventManager.canEmitEvents.set(false);
 
     if(event.type === 'popstate') {
       var action = event.value;
@@ -161,4 +160,6 @@ LocationEvent = function(appName) {
 
     return $window[router].go.apply($window[router], args);
   };
+
+  return this.initialize();
 };
