@@ -28,6 +28,7 @@ EventManager.prototype._setupAllEvents = function() {
   this.click = new Click();
   this.location = new LocationEvent();
   this.scroll = new Scroll();
+  this.forms = new FormsEvent();
   // this.login = new LoginEvent();
 };
 
@@ -35,6 +36,7 @@ EventManager.prototype._tearDownAllEvents = function() {
   this.click.tearDown();
   this.location.tearDown();
   this.scroll.tearDown();
+  this.forms.tearDown();
   // this.login.tearDown();
 };
 
@@ -46,7 +48,7 @@ EventManager.prototype.handleEvent = function(event) {
   console.log("HANDLING EVENT", event.getName());
 
   if (event.type === "forms") {
-    this.forms(event.getAppName())[event.getName()].handleEvent(event);
+    this.forms[event.getName()].handleEvent(event);
   } else
     //this should produce something like `this.click("app").handleEvent(event)`
     this[event.getName()].handleEvent(event);
