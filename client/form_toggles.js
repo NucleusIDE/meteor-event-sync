@@ -7,15 +7,16 @@
  * * select input
  */
 
-InputToggleEvent = function(appName) {
+InputToggleEvent = function() {
   var EVENT_NAME  = "input:toggles",
-      APP_NAME = appName,
-      $document = NucleusClient.getWindow(APP_NAME).document,
-      utils = NucleusEventManager.getUtils(APP_NAME);
+      $document = window.document,
+      utils = new EventUtils(window);
 
   this.initialize = function () {
     var browserEvent = this.syncBrowserEvent;
     this.addEvents(NucleusEventManager, browserEvent);
+
+    return this;
   };
 
   this.tearDown = function() {
@@ -25,7 +26,7 @@ InputToggleEvent = function(appName) {
 
   this.syncBrowserEvent = function (event) {
 
-    if (NucleusEventManager.canEmitEvents) {
+    if (NucleusEventManager.canEmitEvents.get()) {
       var elem = event.target || event.srcElement;
       var data;
       if (elem.type === "radio" || elem.type === "checkbox" || elem.tagName === "SELECT") {
@@ -33,7 +34,6 @@ InputToggleEvent = function(appName) {
 
         data = utils.getElementData(elem);
         ev.setName(EVENT_NAME);
-        ev.setAppName(APP_NAME);
         ev.type = 'forms';
         data.type = elem.type;
         data.checked = elem.checked;
@@ -42,13 +42,13 @@ InputToggleEvent = function(appName) {
         ev.broadcast();
       }
     } else {
-      NucleusEventManager.canEmitEvents = true;
+      NucleusEventManager.canEmitEvents.set(true);
     }
   };
 
   this.handleEvent = function (event) {
     var data = JSON.parse(event.target);
-    NucleusEventManager.canEmitEvents = false;
+    NucleusEventManager.canEmitEvents.set(false);
 
     var elem = utils.getSingleElement(data.tagName, data.index);
 
@@ -95,4 +95,6 @@ InputToggleEvent = function(appName) {
       }
     }
   };
+
+  return this.initialize();
 };

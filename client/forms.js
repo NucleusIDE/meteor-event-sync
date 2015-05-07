@@ -11,7 +11,7 @@ FormsEvent = function(appName) {
   var APP_NAME = appName;
   this.initialize = function () {
     this['input:text'] = new InputTextEvent(APP_NAME);
-    // this['input:toggles'] = new InputToggleEvent(APP_NAME);
+    this['input:toggles'] = new InputToggleEvent(APP_NAME);
     // this['form:submit'] = new FormSubmitEvent(APP_NAME);
 
     return this;
@@ -19,7 +19,7 @@ FormsEvent = function(appName) {
 
   this.tearDown = function() {
     this['input:text'].tearDown();
-    // this['input:toggles'].tearDown();
+    this['input:toggles'].tearDown();
     // this['form:submit'].tearDown();
   };
 
