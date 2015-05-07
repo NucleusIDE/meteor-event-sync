@@ -27,11 +27,13 @@ EventManager.prototype.stop = function() {
 EventManager.prototype._setupAllEvents = function() {
   this.click = new Click();
   this.location = new LocationEvent();
+  this.scroll = new Scroll();
 };
 
 EventManager.prototype._tearDownAllEvents = function() {
   this.click.tearDown();
   this.location.tearDown();
+  this.scroll.tearDown();
 };
 
 EventManager.prototype.handleEvent = function(event) {
