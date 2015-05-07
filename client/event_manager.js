@@ -19,12 +19,19 @@ EventManager.prototype.start = function() {
 };
 
 EventManager.prototype.stop = function() {
-  this.isSyncingEvents.set(true);
+  this.isSyncingEvents.set(false);
   this._eventSub.stop();
+  this._tearDownAllEvents();
 };
 
 EventManager.prototype._setupAllEvents = function() {
   this.click = new Click();
+  this.location = new LocationEvent();
+};
+
+EventManager.prototype._tearDownAllEvents = function() {
+  this.click.tearDown();
+  this.location.tearDown();
 };
 
 EventManager.prototype.handleEvent = function(event) {

@@ -2,7 +2,7 @@
  * # ClickEvent
  * Handle capturing, syncing and receiving click events.
  */
-Click = function(appName) {
+Click = function() {
   var EVENT_NAME  = "click",
       $document = window.document,
       utils = new EventUtils(window);
