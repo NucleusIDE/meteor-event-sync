@@ -4,48 +4,41 @@
  * Handle capturing, syncing and receiving form submit events.
  */
 
-FormSubmitEvent = function(appName) {
+FormSubmitEvent = function() {
   var EVENT_NAME  = "input:submit",
-      APP_NAME = appName,
-      $document = NucleusClient.getWindow(APP_NAME).document,
-      utils = NucleusEventManager.getUtils(APP_NAME);
+      $document = window.document,
+      utils = new EventUtils(window);
 
   this.initialize = function () {
-    return;
-    var browserEvent = this.syncBrowserEvent;
-    NucleusEventManager.addEvent($document.body, "submit", browserEvent);
-    NucleusEventManager.addEvent($document.body, "reset", browserEvent);
+    NucleusEventManager.addEvent($document.body, "submit", this.syncBrowserEvent);
+    NucleusEventManager.addEvent($document.body, "reset", this.syncBrowserEvent);
   };
 
   this.tearDown = function () {
-    return;
-
-    var browserEvent = this.syncBrowserEvent;
-    NucleusEventManager.removeEvent($document.body, "submit", browserEvent);
-    NucleusEventManager.removeEvent($document.body, "reset", browserEvent);
+    NucleusEventManager.removeEvent($document.body, "submit", this.syncBrowserEvent);
+    NucleusEventManager.removeEvent($document.body, "reset", this.syncBrowserEvent);
   };
 
   this.syncBrowserEvent = function (event) {
-    if (NucleusEventManager.canEmitEvents) {
+    if (NucleusEventManager.canEmitEvents.get()) {
       var elem = event.target || event.srcElement;
       var data = utils.getElementData(elem);
       data.type = event.type;
 
       var ev = new NucleusEvent();
       ev.setName(EVENT_NAME);
-      ev.setAppName(APP_NAME);
       ev.type = 'forms';
       ev.setTarget(data);
       ev.broadcast();
     } else {
-      NucleusEventManager.canEmitEvents = true;
+      NucleusEventManager.canEmitEvents.set(true);
     }
   };
 
   this.handleEvent = function (event) {
     var data = JSON.parse(event.target);
     var elem = utils.getSingleElement(data.tagName, data.index);
-    NucleusEventManager.canEmitEvents = false;
+    NucleusEventManager.canEmitEvents.set(false);
 
     if (elem && data.type === "submit") {
       //We wrap elem as a jquery object becuase elem.submit() don't trigger any event handlers on submit added in meteor app and cause reload
