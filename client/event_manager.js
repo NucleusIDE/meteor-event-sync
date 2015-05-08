@@ -54,7 +54,7 @@ EventManager.prototype.handleEvent = function(event) {
 
 EventManager.prototype._startRecievingEvents = function() {
   //Replay all events since latest route change.
-  // this.replayEventsSinceLastRouteChange();
+  this.replayEventsSinceLastRouteChange();
 
   var events = NucleusEvent.getNewEvents();    //Get new events to be played.
   var eventListener = events.observe({
@@ -86,15 +86,11 @@ EventManager.prototype.replayEventsSinceLastRouteChange = function() {
   /**
    * Replay all events that happened after latest route change.
    */
-  var onlineUsers = NucleusEventManager.getRecievers().map(function(user) {
-    return user._id;
-  });
-  onlineUsers = _.difference(onlineUsers, NucleusUser.me()._id);
 
-  if(onlineUsers.length === 0) {return false;}
+  console.log("Replaying events");
 
   // Get the last go event created by any logged in nucleus user.
-  var lastGoEvent = NucleusEvents.find({name: "location", originator: {$in: onlineUsers}}, {sort: {triggered_at: -2}, limit: 1  }).fetch()[0];
+  var lastGoEvent = NucleusEvents.find({name: "location"}, {sort: {triggered_at: -2}, limit: 1  }).fetch()[0];
 
   if(lastGoEvent) {
     //Get all the events that happened after `go` event
@@ -102,7 +98,7 @@ EventManager.prototype.replayEventsSinceLastRouteChange = function() {
   }
 
   //Get the last login event that happened.
-  var lastLoginEvent = NucleusEvents.find({name: "login", type: "login", originator: {$in: onlineUsers}}, {sort: {triggered_at: -1}, limit: 1}).fetch()[0];
+  var lastLoginEvent = NucleusEvents.find({name: "login", type: "login"}, {sort: {triggered_at: -1}, limit: 1}).fetch()[0];
 
   //Log in every user who want to sync events. This is so that we won't attempt to route a user to a page which is not accessible because they're not logged in or are logged in as some other user type.
   NucleusEventManager.playEvents([lastLoginEvent]);
