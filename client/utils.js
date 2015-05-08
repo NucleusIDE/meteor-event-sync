@@ -124,8 +124,6 @@ EventUtils = function($window) {
     else
       lastRoll = roller[roll];
 
-
-
     var rollInterval = Meteor.setInterval(function() {
       var rollingVal;
       if(_.isArray(roll)) {
@@ -145,4 +143,21 @@ EventUtils = function($window) {
       }
     }, check_time);
   };
+
+  this.throttled = function(func, time, context, args) {
+    time = time || 300;
+    args = args || [];
+    context = context || {};
+
+    var _timeout = null;
+    return function() {
+      if (_timeout)
+        Meteor.clearTimeout(_timeout);
+
+      _timeout = Meteor.setTimeout(function() {
+        func.apply(context, args);
+      }, time);
+    };
+  };
+
 };

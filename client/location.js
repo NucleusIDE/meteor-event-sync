@@ -41,26 +41,37 @@ LocationEvent = function() {
       $window.MobiRouter.go = $window.MobiRouter.originalGo;
   };
 
-  /**
-   * Send route change events over the wire i.e save them in mongo db.
-   */
+  var locTimeout = null;
   this.syncGoCall = function(router) {
+    /**
+     * Send route change events over the wire i.e save them in mongo db.
+     */
     return function() {
       var args = Array.prototype.slice.call(arguments, 0);
       //Play the original go call as it should for the client originating the event
       var ret = $window[router].originalGo.apply($window[router], args);
       this.pushHistory();
 
-      if (NucleusEventManager.canEmitEvents.get()) {
-        var ev = new NucleusEvent();
+      var processLocationEvent = function() {
+        if (NucleusEventManager.canEmitEvents.get()) {
+          var ev = new NucleusEvent();
 
-        ev.setName(EVENT_NAME);
-        ev.router = router;
-        ev.args = args;
-        ev.broadcast();
-      } else {
-        NucleusEventManager.canEmitEvents.set(true);
+          ev.setName(EVENT_NAME);
+          ev.router = router;
+          ev.args = args;
+          ev.broadcast();
+        } else {
+          NucleusEventManager.canEmitEvents.set(true);
+        }
+      };
+
+      if (locTimeout) {
+        Meteor.clearTimeout(locTimeout);
       }
+
+      locTimeout = Meteor.setTimeout(function() {
+        processLocationEvent();
+      },300);
 
       return ret;
     }.bind(this);
