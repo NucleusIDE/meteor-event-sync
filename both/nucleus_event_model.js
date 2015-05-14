@@ -44,7 +44,7 @@ NucleusEvent.extend({
      * methods in this block are piled up the prototype chain.
      */
 
-    this.originator_id = NucleusEventManager._originatorId;
+    this.originator_id = EventSync._originatorId;
     this.triggered_at = moment().toDate().getTime();
     this.save();
   }
@@ -55,6 +55,6 @@ NucleusEvent.getNewEvents = function() {
    * Get events which are
    * * emitted at most 10 seconds ago
    */
-  var events = NucleusEvents.find({triggered_at: {$gt: moment()-10*1000}, originator_id: {$ne: NucleusEventManager._originatorId}});
+  var events = NucleusEvents.find({triggered_at: {$gt: moment()-10*1000}, originator_id: {$ne: EventSync._originatorId}});
   return events;
 };

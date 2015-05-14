@@ -4,11 +4,11 @@
  *
  * This is done to avoid re-insertion of documents in database when we sync events across multiple clients.
  *
- * We over-ride Meteor.Collection.insert such that it will not insert the document if `NucleusEventManager.isProcessingEvent()` returns true.
+ * We over-ride Meteor.Collection.insert such that it will not insert the document if `EventSync.isProcessingEvent()` returns true.
  */
 var originalInsert = Meteor.Collection.prototype.insert;
 Meteor.Collection.prototype.insert = function() {
-  if(! NucleusEventManager.canEmitEvents.get()) return false;
+  if(! EventSync.canEmitEvents.get()) return false;
 
   var args = new Array(arguments.length);
   var ctx = this;

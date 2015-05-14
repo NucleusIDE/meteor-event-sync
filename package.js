@@ -39,7 +39,7 @@ Package.onUse(function(api) {
     'client/login.js',
   ], 'client');
 
-  api.export(['NucleusEventManager'], ['client']);
+  api.export(['EventSync'], ['client']);
 });
 
 Package.onTest(function(api) {});

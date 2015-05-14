@@ -10,12 +10,12 @@ Scroll = function() {
   this.$window = $window;
 
   this.initialize = function () {
-    NucleusEventManager.addEvent($window, EVENT_NAME, this.syncEvent);
+    EventSync.addEvent($window, EVENT_NAME, this.syncEvent);
     return this;
   };
 
   this.tearDown = function () {
-    NucleusEventManager.removeEvent($window, EVENT_NAME, this.syncEvent);
+    EventSync.removeEvent($window, EVENT_NAME, this.syncEvent);
   };
 
   /**
@@ -23,7 +23,7 @@ Scroll = function() {
    */
   var appScrollSynced = false;
   this.syncEvent = function () {
-    var canEmit = NucleusEventManager.canEmitEvents.get();
+    var canEmit = EventSync.canEmitEvents.get();
     var syncScroll = function() {
       var ev = new NucleusEvent();
       ev.setName(EVENT_NAME);
@@ -39,17 +39,17 @@ Scroll = function() {
           y: that.getScrollPosition().raw.y,
           x: that.getScrollPosition().raw.x
         };
-        NucleusEventManager.appUtils.executeWhenStopRolling(
+        EventSync.appUtils.executeWhenStopRolling(
           roller, ['x', 'y'], syncScroll, 1000
         );
         appScrollSynced = true;
       }
     } else
-      NucleusEventManager.canEmitEvents.set(true);
+      EventSync.canEmitEvents.set(true);
   }.bind(this);
 
   this.handleEvent = function (data) {
-    NucleusEventManager.canEmitEvents.set(false);
+    EventSync.canEmitEvents.set(false);
 
     var scrollSpace = utils.getScrollSpace();
     //I couldn't understand the meaning of below lines for code from browser-sync

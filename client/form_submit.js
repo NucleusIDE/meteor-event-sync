@@ -10,17 +10,17 @@ FormSubmitEvent = function() {
       utils = new EventUtils(window);
 
   this.initialize = function () {
-    NucleusEventManager.addEvent($document.body, "submit", this.syncBrowserEvent);
-    NucleusEventManager.addEvent($document.body, "reset", this.syncBrowserEvent);
+    EventSync.addEvent($document.body, "submit", this.syncBrowserEvent);
+    EventSync.addEvent($document.body, "reset", this.syncBrowserEvent);
   };
 
   this.tearDown = function () {
-    NucleusEventManager.removeEvent($document.body, "submit", this.syncBrowserEvent);
-    NucleusEventManager.removeEvent($document.body, "reset", this.syncBrowserEvent);
+    EventSync.removeEvent($document.body, "submit", this.syncBrowserEvent);
+    EventSync.removeEvent($document.body, "reset", this.syncBrowserEvent);
   };
 
   this.syncBrowserEvent = function (event) {
-    if (NucleusEventManager.canEmitEvents.get()) {
+    if (EventSync.canEmitEvents.get()) {
       var elem = event.target || event.srcElement;
       var data = utils.getElementData(elem);
       data.type = event.type;
@@ -31,14 +31,14 @@ FormSubmitEvent = function() {
       ev.setTarget(data);
       ev.broadcast();
     } else {
-      NucleusEventManager.canEmitEvents.set(true);
+      EventSync.canEmitEvents.set(true);
     }
   };
 
   this.handleEvent = function (event) {
     var data = JSON.parse(event.target);
     var elem = utils.getSingleElement(data.tagName, data.index);
-    NucleusEventManager.canEmitEvents.set(false);
+    EventSync.canEmitEvents.set(false);
 
     if (elem && data.type === "submit") {
       //We wrap elem as a jquery object becuase elem.submit() don't trigger any event handlers on submit added in meteor app and cause reload

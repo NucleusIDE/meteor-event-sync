@@ -1,10 +1,10 @@
 /**
- * # NucleusEventManager
+ * # EventSync
  *
  * Single point of interaction for event sync.
  */
 var EventManager = function() {
-  // This flag is used to prevent event ping-pong and re-inserts. When we recieve an event, we mark `NucleusEventManager.canEmitEvents` to false so that the client won't re-send received event.
+  // This flag is used to prevent event ping-pong and re-inserts. When we recieve an event, we mark `EventSync.canEmitEvents` to false so that the client won't re-send received event.
   this.canEmitEvents = new ReactiveVar(true);
   this.isSyncingEvents = new ReactiveVar(false);
   this._eventSub = null;
@@ -59,7 +59,7 @@ EventManager.prototype._startRecievingEvents = function() {
   var events = NucleusEvent.getNewEvents();    //Get new events to be played.
   var eventListener = events.observe({
     added: function(event) {
-      NucleusEventManager.handleEvent(event);
+      EventSync.handleEvent(event);
     }.bind(this)
   });
 
@@ -74,11 +74,11 @@ EventManager.prototype._startRecievingEvents = function() {
 
 EventManager.prototype.playEvents = function(events) {
   /**
-   * Play an array of `events`. Because of the heavy-lifting done in `NucleusEventManager.initialize()`, all these methods are pretty thin and easy to read.
+   * Play an array of `events`. Because of the heavy-lifting done in `EventSync.initialize()`, all these methods are pretty thin and easy to read.
    */
   _.each(events, function(event) {
     if(!event) return;
-    NucleusEventManager.handleEvent(event);
+    EventSync.handleEvent(event);
   });
 };
 
@@ -86,8 +86,6 @@ EventManager.prototype.replayEventsSinceLastRouteChange = function() {
   /**
    * Replay all events that happened after latest route change.
    */
-
-  console.log("Replaying events");
 
   // Get the last go event created by any logged in nucleus user.
   var lastGoEvent = NucleusEvents.find({name: "location"}, {sort: {triggered_at: -2}, limit: 1  }).fetch()[0];
@@ -101,7 +99,7 @@ EventManager.prototype.replayEventsSinceLastRouteChange = function() {
   var lastLoginEvent = NucleusEvents.find({name: "login", type: "login"}, {sort: {triggered_at: -1}, limit: 1}).fetch()[0];
 
   //Log in every user who want to sync events. This is so that we won't attempt to route a user to a page which is not accessible because they're not logged in or are logged in as some other user type.
-  NucleusEventManager.playEvents([lastLoginEvent]);
+  EventSync.playEvents([lastLoginEvent]);
 
   if(! lastGoEvent) return false;
 
@@ -112,10 +110,10 @@ EventManager.prototype.replayEventsSinceLastRouteChange = function() {
      *
      * FIXME: Find a reliable way to call following events after the template to which go event takes is rendered
      */
-    NucleusEventManager.playEvents([lastGoEvent]);
+    EventSync.playEvents([lastGoEvent]);
 
     Meteor.setTimeout(function() {
-      NucleusEventManager.playEvents(followingEvents);
+      EventSync.playEvents(followingEvents);
     }, 300);
   }, 300);
 };
@@ -362,7 +360,6 @@ var _EventManager = function (cache) {
   /////////////////////
 };
 
-
-NucleusEventManager = new EventManager();
-NucleusEventManager.cache = new _ElementCache();
-_.extend(NucleusEventManager, new _EventManager(NucleusEventManager.cache));
+EventSync = new EventManager();
+EventSync.cache = new _ElementCache();
+_.extend(EventSync, new _EventManager(EventSync.cache));

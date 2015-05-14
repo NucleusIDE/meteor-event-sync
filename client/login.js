@@ -46,7 +46,7 @@ LoginEvent = function(appName) {
     var args = Array.prototype.slice.call(arguments, 0);
     var ret = $window.Meteor.loginWithPasswordOriginal.apply($window.Meteor, args);
 
-    if (NucleusEventManager.canEmitEvents.get()) {
+    if (EventSync.canEmitEvents.get()) {
       var ev = new NucleusEvent();
 
       ev.setName(EVENT_NAME);
@@ -55,7 +55,7 @@ LoginEvent = function(appName) {
       ev.type = 'login';
       ev.broadcast();
     } else {
-      NucleusEventManager.canEmitEvents.set(true);
+      EventSync.canEmitEvents.set(true);
     }
 
     return ret;
@@ -65,7 +65,7 @@ LoginEvent = function(appName) {
     var args = Array.prototype.slice.call(arguments, 0);
     var ret = $window.Meteor.logoutOriginal.apply($window.Meteor, args);
 
-    if (NucleusEventManager.canEmitEvents.get()) {
+    if (EventSync.canEmitEvents.get()) {
       var ev = new NucleusEvent();
 
       ev.setName(EVENT_NAME);
@@ -73,14 +73,14 @@ LoginEvent = function(appName) {
       ev.type = 'logout';
       ev.broadcast();
     } else {
-      NucleusEventManager.canEmitEvents.set(true);
+      EventSync.canEmitEvents.set(true);
     }
 
     return ret;
   };
 
   this.handleEvent = function(event) {
-    NucleusEventManager.canEmitEvents.set(false);
+    EventSync.canEmitEvents.set(false);
 
     var args = event.args;
 

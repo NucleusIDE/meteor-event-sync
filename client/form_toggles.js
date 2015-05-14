@@ -14,19 +14,19 @@ InputToggleEvent = function() {
 
   this.initialize = function () {
     var browserEvent = this.syncBrowserEvent;
-    this.addEvents(NucleusEventManager, browserEvent);
+    this.addEvents(EventSync, browserEvent);
 
     return this;
   };
 
   this.tearDown = function() {
     var browserEvent = this.syncBrowserEvent;
-    this.removeEvents(NucleusEventManager, browserEvent);
+    this.removeEvents(EventSync, browserEvent);
   };
 
   this.syncBrowserEvent = function (event) {
 
-    if (NucleusEventManager.canEmitEvents.get()) {
+    if (EventSync.canEmitEvents.get()) {
       var elem = event.target || event.srcElement;
       var data;
       if (elem.type === "radio" || elem.type === "checkbox" || elem.tagName === "SELECT") {
@@ -42,13 +42,13 @@ InputToggleEvent = function() {
         ev.broadcast();
       }
     } else {
-      NucleusEventManager.canEmitEvents.set(true);
+      EventSync.canEmitEvents.set(true);
     }
   };
 
   this.handleEvent = function (event) {
     var data = JSON.parse(event.target);
-    NucleusEventManager.canEmitEvents.set(false);
+    EventSync.canEmitEvents.set(false);
 
     var elem = utils.getSingleElement(data.tagName, data.index);
 

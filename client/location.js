@@ -13,14 +13,14 @@ LocationEvent = function() {
    */
   this.initialize = function() {
     this.overRideGoCalls();
-    NucleusEventManager.addEvent($window, 'popstate', this.syncGoPushstate);
+    EventSync.addEvent($window, 'popstate', this.syncGoPushstate);
 
     return this;
   };
 
   this.tearDown = function() {
     this.undoGoCallOverRide();
-    NucleusEventManager.removeEvent($window, 'popstate', this.syncGoPushstate);
+    EventSync.removeEvent($window, 'popstate', this.syncGoPushstate);
   };
 
   this.overRideGoCalls = function() {
@@ -53,7 +53,7 @@ LocationEvent = function() {
       this.pushHistory();
 
       var processLocationEvent = function() {
-        if (NucleusEventManager.canEmitEvents.get()) {
+        if (EventSync.canEmitEvents.get()) {
           var ev = new NucleusEvent();
 
           ev.setName(EVENT_NAME);
@@ -61,7 +61,7 @@ LocationEvent = function() {
           ev.args = args;
           ev.broadcast();
         } else {
-          NucleusEventManager.canEmitEvents.set(true);
+          EventSync.canEmitEvents.set(true);
         }
       };
 
@@ -91,7 +91,7 @@ LocationEvent = function() {
       else return 'back';
     };
 
-    if (NucleusEventManager.canEmitEvents.get()) {
+    if (EventSync.canEmitEvents.get()) {
       var hist = loc.history,
           cursor = loc.curIndex,
           url = $window.location.pathname;
@@ -117,7 +117,7 @@ LocationEvent = function() {
         return;
       }
     } else {
-      NucleusEventManager.canEmitEvents.set(true);
+      EventSync.canEmitEvents.set(true);
     }
   };
 
@@ -153,7 +153,7 @@ LocationEvent = function() {
 
   //Handle received events
   this.handleEvent = function(event) {
-    NucleusEventManager.canEmitEvents.set(false);
+    EventSync.canEmitEvents.set(false);
 
     if(event.type === 'popstate') {
       var action = event.value;
