@@ -39,7 +39,7 @@ Scroll = function() {
           y: that.getScrollPosition().raw.y,
           x: that.getScrollPosition().raw.x
         };
-        EventSync.appUtils.executeWhenStopRolling(
+        utils.executeWhenStopRolling(
           roller, ['x', 'y'], syncScroll, 1000
         );
         appScrollSynced = true;
