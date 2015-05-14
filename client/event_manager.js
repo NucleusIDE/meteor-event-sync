@@ -9,6 +9,7 @@ var EventManager = function() {
   this.isSyncingEvents = new ReactiveVar(false);
   this._eventSub = null;
   this._originatorId = new Mongo.ObjectID()._str;
+  this._ExternalEventsFuncs = {};
   this._externalEvents = {};
   this.Utils = new EventUtils(window);
   this.Collection = NucleusEvent;
@@ -37,7 +38,7 @@ EventManager.prototype._setupAllEvents = function() {
   this.login = new LoginEvent();
 
   _.keys(this._externalEvents).forEach(function(eventName) {
-    self._externalEvents[eventName] = new self._externalEvents[eventName](self);
+    self._externalEvents[eventName] = new self._ExternalEventsFuncs[eventName](self);
   });
 };
 
@@ -134,7 +135,7 @@ EventManager.prototype.replayEventsSinceLastRouteChange = function() {
 };
 
 EventManager.prototype.addExternalEvent = function(event) {
-  this._externalEvents[event.name] = event;
+  this._ExternalEventsFuncs[event.name] = event;
 };
 
 //,-----------------------------------------------------------
