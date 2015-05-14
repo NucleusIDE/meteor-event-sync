@@ -15,7 +15,6 @@ EventUtils = function($window) {
     return this.getWindow().document;
   };
 
-
   /**
    * Cross-browser scroll position
    * returns {{x: number, y: number}}

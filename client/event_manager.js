@@ -9,6 +9,9 @@ var EventManager = function() {
   this.isSyncingEvents = new ReactiveVar(false);
   this._eventSub = null;
   this._originatorId = new Mongo.ObjectID()._str;
+  this._externalEvents = {};
+  this.Utils = new EventUtils(window);
+  this.Collection = NucleusEvent;
 };
 
 EventManager.prototype.start = function() {
@@ -25,19 +28,31 @@ EventManager.prototype.stop = function() {
 };
 
 EventManager.prototype._setupAllEvents = function() {
+  var self = this;
+
   this.click = new Click();
   this.location = new LocationEvent();
   this.scroll = new Scroll();
   this.forms = new FormsEvent();
   this.login = new LoginEvent();
+
+  _.keys(this._externalEvents).forEach(function(eventName) {
+    self._externalEvents[eventName] = new self._externalEvents[eventName](self);
+  });
 };
 
 EventManager.prototype._tearDownAllEvents = function() {
+  var self = this;
+
   this.click.tearDown();
   this.location.tearDown();
   this.scroll.tearDown();
   this.forms.tearDown();
   this.login.tearDown();
+
+  _.keys(this._externalEvents).forEach(function(eventName) {
+    self._externalEvents[eventName].tearDown();
+  });
 };
 
 EventManager.prototype.handleEvent = function(event) {
@@ -118,6 +133,9 @@ EventManager.prototype.replayEventsSinceLastRouteChange = function() {
   }, 300);
 };
 
+EventManager.prototype.addExternalEvent = function(event) {
+  this._externalEvents[event.name] = event;
+};
 
 //,-----------------------------------------------------------
 //| START COPIED CODE

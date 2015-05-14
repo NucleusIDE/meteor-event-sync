@@ -26,8 +26,8 @@ Package.onUse(function(api) {
   api.addFiles([
     'global_overrides.js',
     'client/subscriptions.js',
-    'client/event_manager.js',
     'client/utils.js',
+    'client/event_manager.js',
     'client/nucleus_file_changes.js',
     'client/clicks.js',
     'client/scroll.js',
