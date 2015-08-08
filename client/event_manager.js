@@ -10,6 +10,7 @@ var EventManager = function() {
   this._eventSub = null;
   this._originatorId = new Mongo.ObjectID()._str;
   this._ExternalEventsFuncs = {};
+  this._eventFilters = {};
   this._externalEvents = {};
   this.Utils = new EventUtils(window);
   this.Collection = NucleusEvent;
@@ -24,6 +25,11 @@ EventManager.prototype.start = function() {
 
 EventManager.prototype.setOriginatorId = function(id) {
   this._originatorId = id;
+};
+
+EventManager.prototype.addEventFilter = function(eventName, filterFunc) {
+  this._eventFilters[eventName] = this._eventFilters[eventName] || [];
+  this._eventFilters[eventName].push(filterFunc);
 };
 
 EventManager.prototype.stop = function() {

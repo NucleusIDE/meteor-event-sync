@@ -44,6 +44,17 @@ Click = function() {
     var canEmit = EventSync.canEmitEvents.get();
 
     if (canEmit) {
+      var filters = EventSync._eventFilters['click'];
+      if (filters && filters.length) {
+        var shallProceed = true;
+        filters.forEach(function(filter) {
+          shallProceed = filter(event);
+        });
+        if(!shallProceed) {
+          return;
+        }
+      }
+
       var elem = event.target || event.srcElement;
       if (elem.type === "checkbox" || elem.type === "radio") {
         utils.forceChange(elem);
