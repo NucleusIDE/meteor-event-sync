@@ -1,8 +1,8 @@
 Package.describe({
-  name: 'nucleuside:eventsync',
-  version: '0.2.0',
+  name: 'ultimateide:event-sync',
+  version: '0.1.0',
   summary: 'Sync events across meteor apps',
-  git: 'https://github.com/nucleuside/meteor-eventsync',
+  git: 'https://github.com/nucleuside/meteor-event-sync',
   documentation: 'README.md'
 });
 
@@ -12,7 +12,7 @@ Package.onUse(function(api) {
   api.use(['jquery', 'deps', 'underscore', 'session', 'mongo',
            'reactive-var',
            'mrt:moment@2.8.1',
-           'nucleuside:smart-models@0.0.6',]);
+           'ultimateide:ultimate-mvc@0.0.19',]);
 
   api.addFiles(
     'both/nucleus_event_model.js',

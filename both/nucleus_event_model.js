@@ -1,5 +1,4 @@
 /**
- # NucleusEvents
  ## Attributes
  * * name:                         String
  * * triggered_at:                 Date
@@ -16,10 +15,7 @@
  *   * scroll: editorScroll (for nucleus editor scroll))
  */
 
-NucleusEvents = new Meteor.Collection('nucleus_events');
-NucleusEvent = Model(NucleusEvents);
-
-NucleusEvent.extend({
+NucleusEvent = Ultimate('NucleusEvent').extends(UltimateModel, {
   setTarget: function(target) {
     this.target = JSON.stringify(target);
   },
@@ -49,6 +45,8 @@ NucleusEvent.extend({
     this.save();
   }
 });
+
+NucleusEvents = NucleusEvent.collection;
 
 NucleusEvent.getNewEvents = function() {
   /**
