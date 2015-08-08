@@ -22,6 +22,10 @@ EventManager.prototype.start = function() {
   this._startRecievingEvents();
 };
 
+EventManager.prototype.setOriginatorId = function(id) {
+  this._originatorId = id;
+};
+
 EventManager.prototype.stop = function() {
   this.isSyncingEvents.set(false);
   this._eventSub.stop();
