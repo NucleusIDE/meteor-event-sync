@@ -47,7 +47,7 @@ EventManager.prototype._setupAllEvents = function() {
   this.forms = new FormsEvent();
   this.login = new LoginEvent();
 
-  _.keys(this._externalEvents).forEach(function(eventName) {
+  _.keys(this._ExternalEventsFuncs).forEach(function(eventName) {
     self._externalEvents[eventName] = new self._ExternalEventsFuncs[eventName](self);
   });
 };
@@ -74,8 +74,10 @@ EventManager.prototype.handleEvent = function(event) {
   if (event.type === "forms") {
     this.forms[event.getName()].handleEvent(event);
   } else
-    //this should produce something like `this.click("app").handleEvent(event)`
-    this[event.getName()].handleEvent(event);
+    if(this[event.getName()]) {
+      this[event.getName()].handleEvent(event);
+    } else
+      this._externalEvents[event.getName()].handleEvent(event);
 };
 
 EventManager.prototype._startRecievingEvents = function() {
