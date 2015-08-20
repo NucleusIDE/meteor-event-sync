@@ -30,6 +30,7 @@ Package.onUse(function(api) {
     'client/event_manager.js',
     'client/nucleus_file_changes.js',
     'client/clicks.js',
+    'client/dblclicks.js',
     'client/scroll.js',
     'client/forms.js',
     'client/form_inputs.js',

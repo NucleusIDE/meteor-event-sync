@@ -8,7 +8,10 @@
  */
 var originalInsert = Meteor.Collection.prototype.insert;
 Meteor.Collection.prototype.insert = function() {
-  if(! EventSync.canEmitEvents.get()) return false;
+  if(! EventSync.canEmitEvents.get()) {
+    console.log('Prevented insert');
+    return false;
+  }
 
   var args = new Array(arguments.length);
   var ctx = this;
@@ -18,4 +21,4 @@ Meteor.Collection.prototype.insert = function() {
   }
   return originalInsert.apply(ctx, args);
 };
-  
+

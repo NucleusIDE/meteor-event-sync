@@ -42,6 +42,7 @@ EventManager.prototype._setupAllEvents = function() {
   var self = this;
 
   this.click = new Click();
+  this.dblclick = new DblClick();
   this.location = new LocationEvent();
   this.scroll = new Scroll();
   this.forms = new FormsEvent();
@@ -56,6 +57,7 @@ EventManager.prototype._tearDownAllEvents = function() {
   var self = this;
 
   this.click.tearDown();
+  this.dblclick.tearDown();
   this.location.tearDown();
   this.scroll.tearDown();
   this.forms.tearDown();
